@@ -3,6 +3,8 @@ import { FilterQuery } from 'mongoose'
 import NotFoundError from '../errors/not-found-error'
 import Order from '../models/order'
 import User, { IUser } from '../models/user'
+import BadRequestError from '../errors/bad-request-error'
+import escapeRegExp from '../utils/escapeRegExp'
 
 // TODO: Добавить guard admin
 // eslint-disable-next-line max-len
@@ -28,7 +30,16 @@ export const getCustomers = async (
             orderCountTo,
             search,
         } = req.query
-
+        if (
+            search !== undefined &&
+            (typeof search !== 'string' || search.length > 100)
+        ) {
+            return next(
+                new BadRequestError(
+                    'Поиск должен быть строкой не длиннее 100 символов'
+                )
+            )
+        }
         const filters: FilterQuery<Partial<IUser>> = {}
 
         if (registrationDateFrom) {
@@ -92,7 +103,7 @@ export const getCustomers = async (
         }
 
         if (search) {
-            const searchRegex = new RegExp(search as string, 'i')
+            const searchRegex = new RegExp(escapeRegExp(search), 'i')
             const orders = await Order.find(
                 {
                     $or: [{ deliveryAddress: searchRegex }],
