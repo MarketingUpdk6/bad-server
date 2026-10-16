@@ -133,3 +133,13 @@ export const validateAuthentication = celebrate({
         }),
     }),
 })
+
+export const validateUserUpdateBody = celebrate({
+    body: Joi.object({
+        name: Joi.string().min(2).max(30),
+        email: Joi.string().email().max(254),
+        phone: Joi.string().max(30),
+    })
+        .min(1)
+        .unknown(false),
+})
