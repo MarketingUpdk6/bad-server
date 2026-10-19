@@ -23,6 +23,14 @@ export const uploadFile = async (
     }
 
     try {
+        if (file.size <= 2 * 1024) {
+            await unlink(file.path)
+
+            return next(
+                new BadRequestError('Размер файла должен быть больше 2 КБ')
+            )
+        }
+
         try {
             const image = sharp(file.path, {
                 limitInputPixels: 16_000_000,
