@@ -10,6 +10,7 @@ import errorHandler from './middlewares/error-handler'
 import serveStatic from './middlewares/serverStatic'
 import routes from './routes'
 import { csrfProtection } from './middlewares/csrf'
+import apiLimiter from './middlewares/rate-limit'
 
 const { PORT = 3000 } = process.env
 const app = express()
@@ -40,6 +41,7 @@ app.use(serveStatic(path.join(__dirname, 'public')))
 app.use(urlencoded({ extended: true }))
 app.use(json())
 
+app.use(apiLimiter)
 app.use(csrfProtection)
 app.use(routes)
 app.use(errors())
