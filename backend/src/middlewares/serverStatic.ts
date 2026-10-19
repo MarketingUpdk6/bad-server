@@ -5,5 +5,6 @@ export default function serveStatic(baseDir: string) {
         dotfiles: 'ignore',
         index: false,
         redirect: false,
+        maxAge: '1h',
     })
 }
