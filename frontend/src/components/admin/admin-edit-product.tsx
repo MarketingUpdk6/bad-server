@@ -71,7 +71,7 @@ export default function AdminEditProduct() {
                 title: currentProduct.title,
             })
         }
-    }, [currentProduct])
+    }, [currentProduct, setValuesForm])
 
     const handleUpdateProduct = async () => {
         if (!selectedCategory) {
@@ -84,11 +84,12 @@ export default function AdminEditProduct() {
             price: values.price ? values.price : null,
         }
 
-        editId &&
+        if (editId) {
             updateProduct({ data: dataProduct, id: editId })
                 .unwrap()
                 .then(() => navigateAdminList())
                 .catch((error) => toast.error(error.message))
+        }
     }
     const handleFormSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -96,11 +97,12 @@ export default function AdminEditProduct() {
     }
 
     const handleDeleteProduct = () => {
-        editId &&
+        if (editId) {
             deleteProduct(editId)
                 .unwrap()
                 .then(() => navigateAdminList())
                 .catch((error) => toast.error(error.message))
+        }
     }
 
     return (
