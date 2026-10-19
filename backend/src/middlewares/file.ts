@@ -11,7 +11,6 @@ const extensions: Record<string, string> = {
     'image/jpg': '.jpg',
     'image/jpeg': '.jpg',
     'image/gif': '.gif',
-    'image/svg+xml': '.svg',
 }
 const storage = multer.diskStorage({
     destination: (
@@ -45,7 +44,6 @@ const types = [
     'image/jpg',
     'image/jpeg',
     'image/gif',
-    'image/svg+xml',
 ]
 
 const fileFilter = (
