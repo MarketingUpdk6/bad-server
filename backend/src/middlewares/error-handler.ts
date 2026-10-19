@@ -7,7 +7,7 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
 
         res.status(isFileTooLarge ? 413 : 400).send({
             message: isFileTooLarge
-                ? 'Размер файла не должен превышать 5 МиБ'
+                ? 'Размер файла не должен превышать 5 МБ'
                 : 'Некорректный запрос загрузки файла',
         })
         return
