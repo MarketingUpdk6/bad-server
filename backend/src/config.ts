@@ -1,5 +1,6 @@
 import { CookieOptions } from 'express'
 import ms from 'ms'
+import { randomBytes } from 'crypto'
 
 export const { PORT = '3000' } = process.env
 export const { DB_ADDRESS = 'mongodb://127.0.0.1:27017/weblarek' } = process.env
@@ -21,4 +22,13 @@ export const REFRESH_TOKEN = {
             path: '/',
         } as CookieOptions,
     },
+}
+export const CSRF_SECRET =
+    process.env.CSRF_SECRET ||
+    (process.env.NODE_ENV === 'production'
+        ? ''
+        : randomBytes(32).toString('hex'))
+
+if (!CSRF_SECRET) {
+    throw new Error('Не задана переменная окружения CSRF_SECRET')
 }

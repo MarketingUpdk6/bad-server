@@ -33,6 +33,7 @@ export type ApiListResponse<Type> = {
 class Api {
     private readonly baseUrl: string
     protected options: RequestInit
+    private csrfRequest: Promise<string> | null = null
 
     constructor(baseUrl: string, options: RequestInit = {}) {
         this.baseUrl = baseUrl
@@ -41,6 +42,25 @@ class Api {
                 ...((options.headers as object) ?? {}),
             },
         }
+    }
+
+    private getCsrfToken(): Promise<string> {
+        if (!this.csrfRequest) {
+            this.csrfRequest = fetch(`${this.baseUrl}/auth/csrf-token`, {
+                method: 'GET',
+                credentials: 'include',
+                cache: 'no-store',
+            })
+                .then((response) =>
+                    this.handleResponse<{ csrfToken: string }>(response)
+                )
+                .then((data) => data.csrfToken)
+                .finally(() => {
+                    this.csrfRequest = null
+                })
+        }
+
+        return this.csrfRequest
     }
 
     protected handleResponse<T>(response: Response): Promise<T> {
@@ -53,21 +73,36 @@ class Api {
                   )
     }
 
-    protected async request<T>(endpoint: string, options: RequestInit) {
-        try {
-            const res = await fetch(`${this.baseUrl}${endpoint}`, {
-                ...this.options,
-                ...options,
-            })
-            return await this.handleResponse<T>(res)
-        } catch (error) {
-            return Promise.reject(error)
+    protected async request<T>(
+        endpoint: string,
+        options: RequestInit
+    ): Promise<T> {
+        const method = (options.method ?? 'GET').toUpperCase()
+        const headers = new Headers(this.options.headers)
+
+        new Headers(options.headers).forEach((value, name) => {
+            headers.set(name, value)
+        })
+
+        if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+            const csrfToken = await this.getCsrfToken()
+            headers.set('X-CSRF-Token', csrfToken)
         }
+
+        const response = await fetch(`${this.baseUrl}${endpoint}`, {
+            ...this.options,
+            ...options,
+            method,
+            headers,
+            credentials: 'include',
+        })
+
+        return this.handleResponse<T>(response)
     }
 
     private refreshToken = () => {
         return this.request<UserResponseToken>('/auth/token', {
-            method: 'GET',
+            method: 'POST',
             credentials: 'include',
         })
     }
@@ -79,6 +114,14 @@ class Api {
         try {
             return await this.request<T>(endpoint, options)
         } catch (error) {
+            if (
+                typeof error !== 'object' ||
+                error === null ||
+                !('statusCode' in error) ||
+                error.statusCode !== 401
+            ) {
+                throw error
+            }
             const refreshData = await this.refreshToken()
             if (!refreshData.success) {
                 return Promise.reject(refreshData)
@@ -293,7 +336,7 @@ export class WebLarekAPI extends Api implements IWebLarekAPI {
 
     logoutUser = () => {
         return this.request<ServerResponse<unknown>>('/auth/logout', {
-            method: 'GET',
+            method: 'POST',
             credentials: 'include',
         })
     }

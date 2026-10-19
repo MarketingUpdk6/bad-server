@@ -9,13 +9,31 @@ import { DB_ADDRESS } from './config'
 import errorHandler from './middlewares/error-handler'
 import serveStatic from './middlewares/serverStatic'
 import routes from './routes'
+import { csrfProtection } from './middlewares/csrf'
+import apiLimiter from './middlewares/rate-limit'
 
 const { PORT = 3000 } = process.env
 const app = express()
+app.set('trust proxy', 1)
 
 app.use(cookieParser())
 
-app.use(cors())
+const allowedOrigins = ['http://localhost', 'http://localhost:5173']
+
+app.use(
+    cors({
+        origin(origin, callback) {
+            if (!origin) {
+                callback(null, 'http://localhost:5173')
+                return
+            }
+
+            callback(null, allowedOrigins.includes(origin))
+        },
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    })
+)
 // app.use(cors({ origin: ORIGIN_ALLOW, credentials: true }));
 // app.use(express.static(path.join(__dirname, 'public')));
 
@@ -24,7 +42,8 @@ app.use(serveStatic(path.join(__dirname, 'public')))
 app.use(urlencoded({ extended: true }))
 app.use(json())
 
-app.options('*', cors())
+app.use(apiLimiter)
+app.use(csrfProtection)
 app.use(routes)
 app.use(errors())
 app.use(errorHandler)
