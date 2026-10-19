@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express'
 import { CSRF_SECRET } from '../config'
 import ForbiddenError from '../errors/forbidden-error'
 
-const COOKIE_NAME = 'csrfSeed'
+const COOKIE_NAME = '_csrf'
 const HEX_PATTERN = /^[a-f0-9]{64}$/
 
 const createToken = (seed: string): string =>
