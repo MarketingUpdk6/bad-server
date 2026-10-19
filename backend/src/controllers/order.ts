@@ -7,6 +7,7 @@ import Product, { IProduct } from '../models/product'
 import User from '../models/user'
 import escapeRegExp from '../utils/escapeRegExp'
 import sanitizeComment from '../utils/sanitizeComment'
+import normalizeLimit from '../utils/normalizeLimit'
 
 // eslint-disable-next-line max-len
 // GET /orders?page=2&limit=5&sort=totalAmount&order=desc&orderDateFrom=2024-07-01&orderDateTo=2024-08-01&status=delivering&totalAmountFrom=100&totalAmountTo=1000&search=%2B1
@@ -19,7 +20,7 @@ export const getOrders = async (
     try {
         const {
             page = 1,
-            limit = 10,
+            limit: rawLimit = 10,
             sortField = 'createdAt',
             sortOrder = 'desc',
             status,
@@ -29,6 +30,7 @@ export const getOrders = async (
             orderDateTo,
             search,
         } = req.query
+        const limit = normalizeLimit(rawLimit)
 
         if (
             search !== undefined &&
