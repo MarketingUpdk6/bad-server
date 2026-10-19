@@ -16,7 +16,22 @@ const app = express()
 
 app.use(cookieParser())
 
-app.use(cors())
+const allowedOrigins = ['http://localhost', 'http://localhost:5173']
+
+app.use(
+    cors({
+        origin(origin, callback) {
+            if (!origin) {
+                callback(null, 'http://localhost:5173')
+                return
+            }
+
+            callback(null, allowedOrigins.includes(origin))
+        },
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    })
+)
 // app.use(cors({ origin: ORIGIN_ALLOW, credentials: true }));
 // app.use(express.static(path.join(__dirname, 'public')));
 
@@ -25,7 +40,6 @@ app.use(serveStatic(path.join(__dirname, 'public')))
 app.use(urlencoded({ extended: true }))
 app.use(json())
 
-app.options('*', cors())
 app.use(csrfProtection)
 app.use(routes)
 app.use(errors())
